@@ -12,6 +12,7 @@ maps_migrationrates <- function(log,
   library(sf, quietly = T, verbose = F)
   library(tidytree, warn.conflicts = F, quietly = T)
   library(leaflet)
+  library(dplyr)
 
   
   
@@ -95,7 +96,7 @@ maps_migrationrates <- function(log,
     nRates = n * (n-1)
   }
   
-  out = data.frame()
+  out = base::data.frame()
   indcols = colnames(log)[grepl("indicators", colnames(log))]
   
   for (ri in indcols) {
@@ -142,12 +143,12 @@ maps_migrationrates <- function(log,
   # Create linestring object
   sources <- out %>%
     filter(BF >= 3) %>%
-    select(source, lon_source, lat_source) %>%
+    dplyr::select(source, lon_source, lat_source) %>%
     st_as_sf(coords = c('lon_source', 'lat_source'), crs = 4326)
   
   destinations <- out %>%
     filter(BF >= 3) %>%
-    select(destination, lon_dest, lat_dest) %>%
+    dplyr::select(destination, lon_dest, lat_dest) %>%
     st_as_sf(coords = c('lon_dest', 'lat_dest'), crs = 4326)
   
   point_geoms = cbind(sources, destinations)

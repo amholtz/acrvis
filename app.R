@@ -1,10 +1,45 @@
-library(tidyverse, quietly = T, verbose = F, warn.conflicts = F)
-library(sf, quietly = T, verbose = F)
-library(tidytree, warn.conflicts = F, quietly = T)
-library(shiny)
-library(leaflet)
-source(here::here("map_migrationRates.R"))
 
+#if (!require("BiocManager", quietly = TRUE))
+#  install.packages("BiocManager")
+#BiocManager::install(version = "3.14")
+
+
+if (!"treeio" %in% installed.packages()) {
+  if (!"devtools" %in% installed.packages()) install.packages("devtools")
+  devtools::install_github("GuangchuangYu/treeio")
+} else if (packageVersion("treeio") < "1.5.1.2") {
+  if (!"devtools" %in% installed.packages()) install.packages("devtools")
+  devtools::install_github("GuangchuangYu/treeio")
+}
+
+if (!"purrr" %in% installed.packages()) install.packages("purrr")
+
+
+purrr::walk(c("shiny", "shinyjs", "tidyverse", 
+              "tidytree", "shinyalert"), ~{
+                if (!.x %in% installed.packages()) install.packages(.x)
+              })
+
+
+suppressWarnings({
+  suppressPackageStartupMessages({
+    require(shiny)
+    require(sf)
+    require(shinyjs)
+    require(tidyverse)
+    #require(ggtree)
+    require(tidytree)
+    require(treeio)
+    require(shinyalert)
+    require(leaflet)
+  })
+})
+
+require(BiocManager)
+options(repos = BiocManager::repositories())
+
+source(here::here("map_migrationRates.R"))
+#source(here::here("read_beast.R"))
 
 
 options(shiny.maxRequestSize = 30*1024^2)
@@ -51,10 +86,10 @@ ui <- fluidPage(
       #  tableOutput("contents_log"),
       #  h3("GPS File Sample"),
       #  tableOutput("contents_gps"),
-      #  h3("MCC File Sample"),
-      #plotOutput("contents_mcc"),
+      h3("MCC File Sample"),
+      plotOutput("contents_mcc"),
       h5("Plot migration rates with BF >= 3"),
-      leafletOutput("migration_rates"),
+      leafletOutput("migration_rates")
       
     ))
 )
@@ -106,22 +141,22 @@ server <- function(input, output) {
   })
   
   #MCC RENDERING
-  #output$contents_mcc <- renderPlot({
+  output$contents_mcc <- renderPlot({
     
-  #  req(input$file3)
-   # tryCatch(
-   #   {
-   #     mcc <- read.beast(input$file3$datapath)
-   #   },
-   #   error = function(e) {
+    req(input$file3)
+    tryCatch(
+      {
+        mcc <- treeio::read.beast(input$file3$datapath)
+      },
+      error = function(e) {
         # return a safeError if a parsing error occurs
-   #     stop(safeError(e))
-   #   }
-   # )
+        stop(safeError(e))
+      }
+    )
     
-   # return(ggtree(mcc))
+    return(ggtree::ggtree(mcc))
     
- # })
+  })
   
   
   output$migration_rates <- renderLeaflet({

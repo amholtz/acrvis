@@ -5,10 +5,10 @@ account: aholtz
 server: shinyapps.io
 hostUrl: https://api.shinyapps.io/v1
 appId: 5797656
-bundleId: 5652631
+bundleId: 5655932
 url: https://aholtz.shinyapps.io/ACRVis/
-when: 1646671559.96412
-lastSyncTime: 1646671559.96414
+when: 1646735395.96719
+lastSyncTime: 1646735395.96721
 asMultiple: FALSE
 asStatic: FALSE
-ignoredFiles: BEASTMap/app.R|spread_like_analysis.R|us_states.csv|us_states.tab|data
+ignoredFiles: BEASTMap/app.R|read_beast.R|spread_like_analysis.R|us_states.csv|data
