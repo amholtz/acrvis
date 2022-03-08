@@ -1,7 +1,7 @@
 #' function to create leaflet map from mcc tree
 
 #' @param mcc - mcc tree from BEAST
-#' @param log - state.rates.log file from BEAST
+#' @param date - date of last displayed parent 
 #' @param gps - GPS coordinates for loctions
 #' @param burn - burn-in
 #' @param mean - Poisson prior mean and offset
@@ -9,7 +9,7 @@
 #' @param mrst_par - most recent sampled tip
 
 
-maps_mcc <- function(mcc, log, gps, burn, mean, offset, mrst_par) {
+maps_mcc <- function(mcc, date, gps, burn, mean, offset, mrst_par) {
   
   library(tidyverse, quietly = T, verbose = F, warn.conflicts = F)
   library(sf, quietly = T, verbose = F)
@@ -82,8 +82,7 @@ maps_mcc <- function(mcc, log, gps, burn, mean, offset, mrst_par) {
   
   # 2. Load files--------------------------------------
   #log = read.table("/Volumes/NGS_Viroscreen/workshop/PHINDAccess/batRABV.state.rates.log", header = T, sep = "\t")
-  log = log[ceiling(nrow(log)*b):nrow(log),]
-  
+
   #gps = read.table("/Volumes/NGS_Viroscreen/workshop/PHINDAccess/locationStates.txt", sep = "\t", header = F)
   colnames(gps) = c("location", "lat", "lon")
   locations = gps$location
@@ -133,6 +132,9 @@ maps_mcc <- function(mcc, log, gps, burn, mean, offset, mrst_par) {
   mcc_tree$parent_date = edge_df$parent_date
   st_crs(mcc_tree) = 4326
   
+  mcc_tree <- mcc_tree %>% filter(parent_date < date)
+
+  
   # Plot MCC tree
   ggplot() +
     geom_sf(data = map) +
@@ -151,7 +153,7 @@ maps_mcc <- function(mcc, log, gps, burn, mean, offset, mrst_par) {
     sep="") %>%
     lapply(htmltools::HTML)
   
-  bins <- c(1850, 1960, 1970, 1980, 1990, 2000, round(max(mcc_tree$parent_date),0))
+  bins <- c(1807, 1850, 1960, 1970, 1980, 1990, 2000, 2005)
   pal <- colorBin("YlGnBu", domain = mcc_tree$parent_date, bins = bins)
   
   
@@ -176,7 +178,7 @@ maps_mcc <- function(mcc, log, gps, burn, mean, offset, mrst_par) {
     addLegend(data = mcc_tree, pal = pal, values = ~parent_date, opacity = 0.7,
               title = "Parent Date", position = "bottomleft", na.label = 'no data',
               labFormat = labelFormat(big.mark="")) %>% 
-    addCircles(lng = gps$lon, lat = gps$lat, weight = 20,  popup = gps$location) %>% 
+    addCircles(lng = gps$lon, lat = gps$lat, weight = 20,  popup = gps$location)
     
   
   

@@ -32,6 +32,9 @@ suppressWarnings({
     require(treeio)
     require(shinyalert)
     require(leaflet)
+    require(lubridate)
+    require(RColorBrewer)
+    require(ggimage)
   })
 })
 
@@ -39,7 +42,9 @@ require(BiocManager)
 options(repos = BiocManager::repositories())
 
 source(here::here("map_migrationRates.R"))
-#source(here::here("read_beast.R"))
+source(here::here("map_mcc.R"))
+source(here::here("ggtree_mcc.R"))
+
 
 
 options(shiny.maxRequestSize = 30*1024^2)
@@ -89,15 +94,15 @@ ui <- fluidPage(
                numericInput("offset", 
                             h5("Poisson prior offset"), 
                             value = 5
-
+                            
                )
-
-               ),
-          column(5,
                
-                 numericInput("mrst", 
-                              h5("MRST"), 
-                              value = 2005.5
+        ),
+        column(5,
+               
+               numericInput("mrst", 
+                            h5("MRST"), 
+                            value = 2005.5
                ),
                
                tags$hr(),
@@ -106,7 +111,13 @@ ui <- fluidPage(
                             h5("Poisson prior mean"), 
                             value = 2
                )
-        ))
+        )),
+      sliderInput("dec_dates", "Timeline Animation:",
+                  min = 1807, max = 2010,
+                  value = 2010, step = 30,
+                  animate =
+                    animationOptions(interval = 2000, loop = TRUE))
+      
     ),
     
     # Main panel for displaying outputs ----
@@ -178,17 +189,14 @@ server <- function(input, output) {
   output$contents_mcc <- renderPlot({
     
     req(input$file3)
-    tryCatch(
-      {
-        mcc <- treeio::read.beast(input$file3$datapath)
-      },
-      error = function(e) {
-        # return a safeError if a parsing error occurs
-        stop(safeError(e))
-      }
-    )
+    req(input$file2)
     
-    return(ggtree::ggtree(mcc))
+    mcc <- treeio::read.beast(input$file3$datapath)
+    gps <- read.delim(input$file2$datapath, header=FALSE)
+    
+    
+    
+    return(ggtree_mcc(mcc, gps))
     
   })
   
@@ -224,9 +232,9 @@ server <- function(input, output) {
     
     mcc <- treeio::read.beast(input$file3$datapath)
     
-    maps_mcc(mcc= mcc, log = log, gps = gps, burn = input$burn,
-                        mean = input$mean, offset = input$offset, 
-                        mrst_par = input$mrst)
+    maps_mcc(mcc= mcc, date =input$dec_dates, gps = gps, burn = input$burn,
+             mean = input$mean, offset = input$offset, 
+             mrst_par = input$mrst)
     
   })
 }
