@@ -1,12 +1,15 @@
-#' function to create leaflet map for incidence and death
+#' function to create leaflet map from migration rates
 
-#' @param language - language for figure
-#' @param maps_type - notification rate or change in cases
-#' @param maps_format - WHO or ECDC
+#' @param log - state.rates.log file from BEAST
+#' @param gps - GPS coordinates for loctions
+#' @param burn - burn-in
+#' @param mean - Poisson prior mean and offset
+#' @param offset - Poisson prior mean and offset
+#' @param mrst - most recent sampled tip
 
 
 maps_migrationrates <- function(log,
-                                gps) {
+                                gps, burn, mean, offset, mrst) {
   
   library(tidyverse, quietly = T, verbose = F, warn.conflicts = F)
   library(sf, quietly = T, verbose = F)
@@ -64,14 +67,18 @@ maps_migrationrates <- function(log,
   
   # 1. Specify parameters------------------------------
   # Burnin
-  b = 0.1
+  #b = 0.1
+  b = burn
   
   # Poisson prior mean and offset
-  p_mean = log(2)
-  p_offset = 5 
+  #p_mean = log(2)
+  #p_offset = 5 
+  p_mean = log(mean)
+  p_offset = offset 
+  
   
   # Most recent sampled tip
-  mrst = 2005.5
+  #mrst = 2005.5
   
   
   # 2. Load files--------------------------------------

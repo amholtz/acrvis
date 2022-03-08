@@ -55,7 +55,6 @@ ui <- fluidPage(
     
     # Sidebar panel for inputs ----
     sidebarPanel(
-      
       # Input: Select log file ----
       fileInput("file1", "Choose log File",
                 multiple = FALSE
@@ -75,7 +74,39 @@ ui <- fluidPage(
       # Input: Select mcc file ----
       fileInput("file3", "Choose MCC File",
                 multiple = FALSE
-      )
+      ),
+      fluidRow(
+        column(5,
+               numericInput("burn", 
+                            h5("Burn-in"), 
+                            value = 0.1,
+                            min = 0,
+                            max = 1,
+                            step = 0.1
+               ),
+               tags$hr(),
+               
+               numericInput("offset", 
+                            h5("Poisson prior offset"), 
+                            value = 5
+
+               )
+
+               ),
+          column(5,
+               
+                 numericInput("mrst", 
+                              h5("MRST"), 
+                              value = 2005.5
+               ),
+               
+               tags$hr(),
+               
+               numericInput("mean", 
+                            h5("Poisson prior mean"), 
+                            value = 2
+               )
+        ))
     ),
     
     # Main panel for displaying outputs ----
@@ -89,7 +120,10 @@ ui <- fluidPage(
       h3("MCC File Sample"),
       plotOutput("contents_mcc"),
       h5("Plot migration rates with BF >= 3"),
-      leafletOutput("migration_rates")
+      leafletOutput("migration_rates"),
+      h5("Plot MCC Transitions"),
+      leafletOutput("mcc_map")
+      
       
     ))
 )
@@ -169,7 +203,30 @@ server <- function(input, output) {
                       sep = "\t")
     gps <- read.delim(input$file2$datapath, header=FALSE)
     
-    maps_migrationrates(log = log, gps = gps)
+    burn <- input$burn
+    offset<- input$offset
+    mrst<- input$mrst
+    mean<- input$mean
+    
+    
+    maps_migrationrates(log = log, gps = gps, burn = input$burn,
+                        mean = input$mean, offset = input$offset, 
+                        mrst = input$mrst)
+    
+  })
+  
+  output$mcc_map <- renderLeaflet({
+    
+    req(input$file2)
+    req(input$file3)
+    
+    gps <- read.delim(input$file2$datapath, header=FALSE)
+    
+    mcc <- treeio::read.beast(input$file3$datapath)
+    
+    maps_mcc(mcc= mcc, log = log, gps = gps, burn = input$burn,
+                        mean = input$mean, offset = input$offset, 
+                        mrst_par = input$mrst)
     
   })
 }
